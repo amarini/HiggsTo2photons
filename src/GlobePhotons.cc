@@ -18,6 +18,8 @@
 #include "HiggsAnalysis/HiggsTo2photons/interface/PFIsolation.h"
 #include "HiggsAnalysis/HiggsTo2photons/interface/Mustache.h"
 #include "RecoEgamma/EgammaTools/interface/ggPFPhotons.h"
+#include "PFIsolation/SuperClusterFootprintRemoval/interface/SuperClusterFootprintRemoval.h"
+#include "RecoEcal/EgammaClusterProducers/interface/RecHitFilter.h"
 #include "DataFormats/Math/interface/deltaR.h"
 #include "TFile.h"
 #include <cstdlib>
@@ -69,6 +71,13 @@ GlobePhotons::GlobePhotons(const edm::ParameterSet& iConfig, const char* n): nom
   ecalHitEEColl = iConfig.getParameter<edm::InputTag>("EcalHitEEColl");
   ecalHitESColl = iConfig.getParameter<edm::InputTag>("EcalHitESColl");
 
+  ecalHitCollEnergyTreshEB = iConfig.getParameter<edm::InputTag>("EcalHitEBCollEnergyTreshEB");
+  ecalHitCollEnergyTreshEE = iConfig.getParameter<edm::InputTag>("EcalHitEECollEnergyTreshEE");
+
+  ecalHitCollChi2TreshEB = iConfig.getParameter<edm::InputTag>("EcalHitEBCollChi2TreshEB");
+  ecalHitCollChi2TreshEE = iConfig.getParameter<edm::InputTag>("EcalHitEECollChi2TreshEE");  
+
+
   hcalBEColl =  iConfig.getParameter<edm::InputTag>("HcalHitsBEColl");
   //hcalFColl =  iConfig.getParameter<edm::InputTag>("HcalHitsFColl");
   //hcalHoColl =  iConfig.getParameter<edm::InputTag>("HcalHitsHoColl");
@@ -79,6 +88,7 @@ GlobePhotons::GlobePhotons(const edm::ParameterSet& iConfig, const char* n): nom
 
   rhoCollection = iConfig.getParameter<edm::InputTag>("rhoCollection_algo1");
   vtxCollection = iConfig.getParameter<edm::InputTag>("VertexColl_std");
+  vtxCollectionNoBS = iConfig.getParameter<edm::InputTag>("VertexColl_nobs");
   tkCollection  = iConfig.getParameter<edm::InputTag>("tkColl");
 
   //hcalHitColl = iConfig.getParameter<edm::InputTag>("HcalHitsBEColl");
@@ -207,6 +217,13 @@ void GlobePhotons::defineBranch(TTree* tree) {
   tree->Branch("pho_IsConvOutIn",&pho_IsConvOutIn,"pho_IsConvOutIn[pho_n]/I");
   ////////
 
+
+  tree->Branch("pho_r9_Ethresh",&pho_r9_Ethresh,"pho_r9_Ethresh[pho_n]");
+  tree->Branch("pho_sieie_Ethresh",&pho_sieie_Ethresh,"pho_sieie_Ethresh[pho_n]");
+
+  tree->Branch("pho_r9_chi2Thresh",&pho_r9_chi2Thresh,"pho_r9_chi2Thresh[pho_n]");
+  tree->Branch("pho_sieie_chi2Thresh",&pho_sieie_chi2Thresh,"pho_sieie_chi2Thresh[pho_n]");
+
   //isolation variables
 
   tree->Branch("pho_pfiso_myneutral01", &pho_pfiso_myneutral01, "pho_pfiso_myneutral01[pho_n]/F");
@@ -235,6 +252,14 @@ void GlobePhotons::defineBranch(TTree* tree) {
 
   tree->Branch("pho_schits", "std::vector<std::vector<UInt_t> >", &pho_schits);
   tree->Branch("pho_bchits", "std::vector<std::vector<UInt_t> >", &pho_bchits);
+
+  tree->Branch("pho_pfiso_cleanneutral03", &pho_pfiso_cleanneutral03, "pho_pfiso_cleanneutral03[pho_n]/F");
+  tree->Branch("pho_pfiso_cleanphoton03", &pho_pfiso_cleanphoton03, "pho_pfiso_cleanphoton03[pho_n]/F");  
+  tree->Branch("pho_pfiso_cleancharged03", "std::vector<std::vector<float> >", &pho_pfiso_cleancharged03);
+
+  tree->Branch("pho_pfiso_cleanneutral04", &pho_pfiso_cleanneutral04, "pho_pfiso_cleanneutral04[pho_n]/F");
+  tree->Branch("pho_pfiso_cleanphoton04", &pho_pfiso_cleanphoton04, "pho_pfiso_cleanphoton04[pho_n]/F");
+  tree->Branch("pho_pfiso_cleancharged04", "std::vector<std::vector<float> >", &pho_pfiso_cleancharged04);
 
   //tree->Branch("pho_frixiso", "std::vector<std::vector<float> >", &pho_frixiso);  
 
@@ -448,6 +473,7 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
   iEvent.getByLabel(convertedPhotonColl, hConversions);
   iEvent.getByLabel(electronColl, hElectrons);
   iEvent.getByLabel(vtxCollection, hVertex);
+  iEvent.getByLabel(vtxCollectionNoBS, hVertexNoBS);
   iEvent.getByLabel(tkCollection, tkHandle);
 
   edm::Handle<double> rhoHandle;
@@ -509,6 +535,9 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
 
   pho_schits->clear();
   pho_bchits->clear();
+  pho_pfiso_cleancharged03->clear();
+  pho_pfiso_cleancharged04->clear();
+
 
   pho_n = 0;
 
@@ -775,6 +804,67 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     edm::Handle<EcalRecHitCollection> EEReducedRecHits;
     iEvent.getByLabel(ecalHitEBColl, EBReducedRecHits);
     iEvent.getByLabel(ecalHitEEColl, EEReducedRecHits);
+    /*
+    edm::Handle<EcalRecHitCollection> EBReducedRecHits;
+    edm::Handle<EcalRecHitCollection> EEReducedRecHits;
+    iEvent.getByLabel(ecalHitEBCollEnergyTreshEB, EBReducedRecHits);
+    iEvent.getByLabel(ecalHitEECollEnergyTreshEE, EEReducedRecHits);
+
+    edm::Handle<EcalRecHitCollection> EBReducedRecHits;
+    edm::Handle<EcalRecHitCollection> EEReducedRecHits;
+    iEvent.getByLabel(ecalHitEBCollChi2TreshEB, EBReducedRecHits);
+    iEvent.getByLabel(ecalHitEECollChi2TreshEE, EEReducedRecHits);
+    */
+    //shower shape variables with energy and chi2 cuts
+    EcalClusterLazyTools energyThreshlazyTool(iEvent, iSetup, ecalHitCollEnergyTreshEB, ecalHitCollEnergyTreshEE); 
+    EcalClusterLazyTools chi2ThreshlazyTool(iEvent, iSetup, ecalHitCollChi2TreshEB, ecalHitCollChi2TreshEE); 
+
+    std::vector<float> viCov_Ethresh;
+    viCov_Ethresh = energyThreshlazyTool.localCovariances(*seed_clu);
+
+    const std::vector< std::pair<DetId, float> > & seedrechits = seed_clu->hitsAndFractions();
+    double rechitEnergySum = 0;
+    for (uint i=0; i<seedrechits.size(); i++){
+      if (seedrechits[i].first.subdetId()==EcalBarrel){
+	EBDetId ebDetId  = seedrechits[i].first;
+	double energy = EBReducedRecHits->find(ebDetId)->energy();
+	if (energy>0.08) rechitEnergySum += energy;
+      }
+      if (seedrechits[i].first.subdetId()==EcalEndcap){
+	EEDetId eeDetId  = seedrechits[i].first;
+	double energy = EEReducedRecHits->find(eeDetId)->energy();
+	if (energy>0.3) rechitEnergySum += energy;
+      }
+    }
+    pho_r9_Ethresh[pho_n] = energyThreshlazyTool.e3x3(*seed_clu) / rechitEnergySum;
+    pho_sieie_Ethresh[pho_n] = sqrt(viCov_Ethresh[0]);
+
+    rechitEnergySum = 0;
+    for (uint i=0; i<seedrechits.size(); i++){
+      if (seedrechits[i].first.subdetId()==EcalBarrel){
+	EBDetId ebDetId  = seedrechits[i].first;
+	double chi2 = EBReducedRecHits->find(ebDetId)->chi2();
+	double energy = EBReducedRecHits->find(ebDetId)->energy();
+	if (chi2<40) rechitEnergySum += energy;
+      }
+      if (seedrechits[i].first.subdetId()==EcalEndcap){
+	EEDetId eeDetId  = seedrechits[i].first;
+	double chi2 = EEReducedRecHits->find(eeDetId)->chi2();
+	double energy = EEReducedRecHits->find(eeDetId)->energy();
+	if (chi2<40) rechitEnergySum += energy;
+      }
+    }
+    std::vector<float> viCov_chi2Thresh;
+    viCov_chi2Thresh = chi2ThreshlazyTool.localCovariances(*seed_clu);
+    pho_r9_chi2Thresh[pho_n] = chi2ThreshlazyTool.e3x3(*seed_clu) / rechitEnergySum;
+    pho_sieie_chi2Thresh[pho_n] = sqrt(viCov_chi2Thresh[0]);
+    
+
+
+    pho_must[pho_n] = -9999.;
+    pho_mustnc[pho_n] = -1;
+    //reco::Mustache m;
+    //m.MustacheID(*(localPho->superCluster()), pho_mustnc[pho_n], pho_must[pho_n]);
 
     ggPFPhotons ggPFPhoton(*localPho, phoHpf,hElectrons,
 			   pfCollection,
@@ -1018,7 +1108,38 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     pho_seed_chi2[pho_n] = seedcry_rh != prechits->end() ? seedcry_rh->chi2() : 999.;
     pho_seed_recoflag[pho_n] = seedcry_rh != prechits->end() ? seedcry_rh->recoFlag() : 999.;
 
+
     // isolation variables
+
+    edm::ParameterSet iConfigSCremoval03;
+    iConfigSCremoval03.addUntrackedParameter<double>("isolation_cone_size_forSCremoval",0.3);
+    iConfigSCremoval03.addUntrackedParameter<edm::InputTag>("tag_pfCandidates_forSCremoval", edm::InputTag("particleFlow"));
+    iConfigSCremoval03.addUntrackedParameter<edm::InputTag>("tag_Vertices_forSCremoval", edm::InputTag("offlinePrimaryVertices"));
+    iConfigSCremoval03.addUntrackedParameter<double>("rechit_link_enlargement_forSCremoval",0.25);
+    SuperClusterFootprintRemoval remover03(iEvent,iConfigSCremoval03,iSetup);
+
+    edm::ParameterSet iConfigSCremoval04;
+    iConfigSCremoval04.addUntrackedParameter<double>("isolation_cone_size_forSCremoval",0.4);
+    iConfigSCremoval04.addUntrackedParameter<edm::InputTag>("tag_pfCandidates_forSCremoval", edm::InputTag("particleFlow"));
+    iConfigSCremoval04.addUntrackedParameter<edm::InputTag>("tag_Vertices_forSCremoval", edm::InputTag("offlinePrimaryVertices"));
+    iConfigSCremoval04.addUntrackedParameter<double>("rechit_link_enlargement_forSCremoval",0.25);
+    SuperClusterFootprintRemoval remover04(iEvent,iConfigSCremoval04,iSetup);
+
+    std::vector<float> clean_pfchargediso03;
+    std::vector<float> clean_pfchargediso04;
+
+    pho_pfiso_cleanphoton03[pho_n]  = remover03.PFIsolation("photon",theClus);
+    pho_pfiso_cleanneutral03[pho_n] = remover03.PFIsolation("neutral",theClus);
+    for(unsigned int ivtx=0; ivtx<hVertexNoBS->size(); ++ivtx) clean_pfchargediso03.push_back(remover03.PFIsolation("charged",theClus,ivtx));
+    pho_pfiso_cleancharged03->push_back(clean_pfchargediso03);
+
+    pho_pfiso_cleanphoton04[pho_n]  = remover04.PFIsolation("photon",theClus);
+    pho_pfiso_cleanneutral04[pho_n] = remover04.PFIsolation("neutral",theClus);
+    for(unsigned int ivtx=0; ivtx<hVertexNoBS->size(); ++ivtx) clean_pfchargediso04.push_back(remover04.PFIsolation("charged",theClus,ivtx));
+    pho_pfiso_cleancharged04->push_back(clean_pfchargediso04);
+    
+    
+
     std::vector<reco::PFCandidate::ParticleType> temp;
     temp.push_back(reco::PFCandidate::gamma);
     pho_pfiso_myphoton01[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.1, 0.0, 0.070, 0.015, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
@@ -1027,6 +1148,7 @@ bool GlobePhotons::analyze(const edm::Event& iEvent, const edm::EventSetup& iSet
     pho_pfiso_myphoton04[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.4, 0.0, 0.070, 0.015, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
     pho_pfiso_myphoton05[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.5, 0.0, 0.070, 0.015, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
     pho_pfiso_myphoton06[pho_n]  = cicPhotonId->pfEcalIso(localPho, 0.6, 0.0, 0.070, 0.015, 0.0, 0.0, 0.0, reco::PFCandidate::gamma);
+
 
     /*
     // Egamma vetoes

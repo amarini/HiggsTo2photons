@@ -82,6 +82,12 @@ h2ganalyzer = cms.EDAnalyzer(
     EcalHitEBColl = cms.InputTag("reducedEcalRecHitsEB"),
     EcalHitEEColl = cms.InputTag("reducedEcalRecHitsEE"),
     EcalHitESColl = cms.InputTag("reducedEcalRecHitsES"),
+
+    EcalHitEBCollEnergyTreshEB = cms.InputTag("rechitFilterEnergyEB", "filteredEnergyReducedEcalRecHitsEB", "Globe"),
+    EcalHitEECollEnergyTreshEE = cms.InputTag("rechitFilterEnergyEE", "filteredEnergyReducedEcalRecHitsEE", "Globe"),
+
+    EcalHitEBCollChi2TreshEB = cms.InputTag("rechitFilterChi2EB", "filteredChi2ReducedEcalRecHitsEB", "Globe"),
+    EcalHitEECollChi2TreshEE = cms.InputTag("rechitFilterChi2EE", "filteredChi2ReducedEcalRecHitsEE", "Globe"),
         
     HcalHitsBEColl = cms.InputTag("reducedHcalRecHits", "hbhereco"),
     HcalHitsFColl = cms.InputTag("reducedHcalReHits", "hfreco"), 

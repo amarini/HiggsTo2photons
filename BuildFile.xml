@@ -23,6 +23,7 @@
 <use name="SimTracker/TrackAssociation"/>
 <use name="SimTracker/Records"/>
 <use name="SimTracker/TrackerHitAssociation"/>
+<use name="PFIsolation/SuperClusterFootprintRemoval"/>
 <use name="JetMETCorrections/Objects"/>
 <use name="CMGTools/External"/>
 <use name="TrackingTools/IPTools"/>

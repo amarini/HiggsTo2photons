@@ -187,6 +187,11 @@ class GlobePhotons {
   Float_t pho_pfemaxxtal[MAX_PHOTONS];
   Float_t pho_pfe2nd[MAX_PHOTONS];
 
+  Float_t pho_r9_Ethresh[MAX_PHOTONS];
+  Float_t pho_sieie_Ethresh[MAX_PHOTONS];
+  Float_t pho_r9_chi2Thresh[MAX_PHOTONS];
+  Float_t pho_sieie_chi2Thresh[MAX_PHOTONS];
+
 
   Float_t pho_e2overe9[MAX_PHOTONS];
   Float_t pho_seed_time[MAX_PHOTONS];
@@ -231,6 +236,14 @@ class GlobePhotons {
   std::vector<std::vector<float> >* pho_pfiso_mycharged04;
   std::vector<std::vector<float> >* pho_pfiso_mycharged05;
   std::vector<std::vector<float> >* pho_pfiso_mycharged06;
+
+
+  Float_t pho_pfiso_cleanneutral03[MAX_PHOTONS];
+  Float_t pho_pfiso_cleanneutral04[MAX_PHOTONS];
+  Float_t pho_pfiso_cleanphoton03[MAX_PHOTONS];  
+  Float_t pho_pfiso_cleanphoton04[MAX_PHOTONS];
+  std::vector<std::vector<float> >* pho_pfiso_cleancharged03;
+  std::vector<std::vector<float> >* pho_pfiso_cleancharged04;  
 
   /*
   std::vector<std::vector<float> >* pho_pfiso_egcharged01;
@@ -349,6 +362,14 @@ class GlobePhotons {
   edm::InputTag ecalHitEBColl;
   edm::InputTag ecalHitEEColl;
   edm::InputTag ecalHitESColl;
+
+  edm::InputTag ecalHitCollEnergyTreshEB;
+  edm::InputTag ecalHitCollEnergyTreshEE;
+
+  edm::InputTag ecalHitCollChi2TreshEB;
+  edm::InputTag ecalHitCollChi2TreshEE;
+
+
 // HCAL HITS
   edm::InputTag hcalBEColl;
   edm::InputTag hcalFColl;
@@ -360,6 +381,7 @@ class GlobePhotons {
 
   edm::InputTag rhoCollection;
   edm::InputTag vtxCollection;
+  edm::InputTag vtxCollectionNoBS;
   edm::InputTag tkCollection;
   edm::InputTag hcalHitColl;
   edm::InputTag pfColl;
@@ -372,6 +394,7 @@ class GlobePhotons {
   double rho; 
   
   edm::Handle<reco::VertexCollection> hVertex;
+  edm::Handle<reco::VertexCollection> hVertexNoBS;
   edm::Handle<reco::TrackCollection> tkHandle;
   edm::Handle<reco::GsfElectronCollection> hElectrons;
   edm::Handle<reco::PFCandidateCollection> pfCollection;

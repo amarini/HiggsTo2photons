@@ -108,7 +108,39 @@ process.options = cms.untracked.PSet(
 
 process.load("FWCore.MessageLogger.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 500
-process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(1001))
+process.maxEvents = cms.untracked.PSet(input = cms.untracked.int32(-1))
+
+
+from RecoEcal.EgammaClusterProducers.egammaRechitFilter_cfi import *
+
+process.rechitFilterEnergyEB = rechitFilter.clone()
+process.rechitFilterEnergyEB.noiseEnergyThreshold = cms.double(0.08)
+process.rechitFilterEnergyEB.noiseChi2Threshold = cms.double(999)
+process.rechitFilterEnergyEB.hitProducer = cms.string('reducedEcalRecHitsEB')
+process.rechitFilterEnergyEB.hitCollection = cms.string('')
+process.rechitFilterEnergyEB.reducedHitCollection = cms.string('filteredEnergyReducedEcalRecHitsEB')
+
+process.rechitFilterEnergyEE = rechitFilter.clone()
+process.rechitFilterEnergyEE.noiseEnergyThreshold = cms.double(0.3)
+process.rechitFilterEnergyEE.noiseChi2Threshold = cms.double(999)
+process.rechitFilterEnergyEE.hitProducer = cms.string('reducedEcalRecHitsEE')
+process.rechitFilterEnergyEE.hitCollection = cms.string('')
+process.rechitFilterEnergyEE.reducedHitCollection = cms.string('filteredEnergyReducedEcalRecHitsEE')
+
+process.rechitFilterChi2EB = rechitFilter.clone()
+process.rechitFilterChi2EB.noiseEnergyThreshold = cms.double(-999)
+process.rechitFilterChi2EB.noiseChi2Threshold = cms.double(40)
+process.rechitFilterChi2EB.hitProducer = cms.string('reducedEcalRecHitsEB')
+process.rechitFilterChi2EB.hitCollection = cms.string('')
+process.rechitFilterChi2EB.reducedHitCollection = cms.string('filteredChi2ReducedEcalRecHitsEB')
+
+process.rechitFilterChi2EE = rechitFilter.clone()
+process.rechitFilterChi2EE.noiseEnergyThreshold = cms.double(-999)
+process.rechitFilterChi2EE.noiseChi2Threshold = cms.double(40)
+process.rechitFilterChi2EE.hitProducer = cms.string('reducedEcalRecHitsEE')
+process.rechitFilterChi2EE.hitCollection = cms.string('')
+process.rechitFilterChi2EE.reducedHitCollection = cms.string('filteredChi2ReducedEcalRecHitsEE')
+
 
 process.superClusterMerger =  cms.EDProducer("EgammaSuperClusterMerger",
                                              src = cms.VInputTag(cms.InputTag('correctedHybridSuperClusters'),
@@ -527,8 +559,27 @@ process.newPFchsBtaggingSequence = cms.Sequence(
 # Define path, first for AOD case then for RECO #
 #################################################
 
-process.p11 = cms.Path(process.eventCounters*process.hcallLaserEvent2012Filter*process.ecalLaserCorrFilter*process.eventFilter1*process.pfNoPileUpSequence * process.pfParticleSelectionSequence * process.eleIsoSequence*process.ak5PFchsJets*process.producePFMETCorrections*process.newPFBtaggingSequence*process.newPFchsBtaggingSequence*process.eleRegressionEnergy * process.calibratedElectrons)
+process.p11 = cms.Path(
+		process.rechitFilterEnergyEB*
+		process.rechitFilterEnergyEE*
+		process.rechitFilterChi2EB*
+		process.rechitFilterChi2EE*
+		process.eventCounters*
+		process.hcallLaserEvent2012Filter*
+		process.ecalLaserCorrFilter*
+		process.eventFilter1*
+		process.pfNoPileUpSequence*
+		process.pfParticleSelectionSequence*
+		process.eleIsoSequence*
+		process.ak5PFchsJets*
+		process.producePFMETCorrections*
+		process.newPFBtaggingSequence*
+		process.newPFchsBtaggingSequence*
+		process.eleRegressionEnergy*
+		process.calibratedElectrons
+		)
 #process.p11 = cms.Path(process.eventCounters*process.eventFilter1* process.pfNoPileUpSequence * process.pfParticleSelectionSequence * process.eleIsoSequence*process.ak5PFchsJets*process.pfType1CorrectedMet  )
+
 
 if (flagFastSim == 'OFF' or flagAOD == 'OFF'):
   process.p11 *= process.piZeroDiscriminators

@@ -1,7 +1,12 @@
 #cvs co -r V00-03-37 RecoEgamma/ElectronIdentification
-#cvs co -r regressionMay18b RecoEgamma/EgammaTools
+cvs co -r CMSSW_5_3_9 RecoEcal/EgammaClusterProducers
+cvs co RecoEcal/EgammaClusterProducers/src/RecHitFilter.cc
+cvs co RecoEcal/EgammaClusterProducers/src/SealModule.cc
+cvs co RecoEcal/EgammaClusterProducers/interface/RecHitFilter.h
+cvs co RecoEcal/EgammaClusterProducers/python/egammaRechitFilter_cfi.py
+cvs co -r V00-02d -d PFIsolation/SuperClusterFootprintRemoval UserCode/peruzzi/PFIsolation/SuperClusterFootprintRemoval
 #addpkg CommonTools/ParticleFlow  V00-03-13
-#addpkg RecoEcal/EgammaCoreTools V05-08-21
+addpkg RecoEcal/EgammaCoreTools V05-08-26
 #addpkg RecoParticleFlow/PFProducer  V15-01-11
 cvs co -r V00-02-05 -d CMGTools/External UserCode/CMG/CMGTools/External
 cvs co -d EGamma/EGammaAnalysisTools UserCode/Matteosan/EGamma/EGammaAnalysisTools
@@ -12,7 +17,8 @@ cp HiggsAnalysis/HiggsTo2photons/scripts/download.url EGamma/EGammaAnalysisTools
 addpkg CommonTools/RecoUtils V00-00-09
 addpkg RecoEgamma/EgammaTools V09-00-00
 #addpkg RecoMET/METFilters V00-00-10
+cvs co -d EgammaAnalysis/ElectronTools UserCode/Matteosan/EgammaAnalysis/ElectronTools
 cd EGamma/EGammaAnalysisTools/data/
 wget -i ../../../HiggsAnalysis/HiggsTo2photons/scripts/download.url
-cd ../../../
+cd ../../..
 #checkdeps -a
